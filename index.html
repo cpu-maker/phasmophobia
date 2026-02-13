@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Browser Phasmophobia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="ui">
+    <div id="sanity">Sanity: 100%</div>
+    <div id="equipment">Equipment: EMF</div>
+    <div id="evidence">
+        Evidence:
+        <ul>
+            <li id="emfEvidence">EMF 5: ❌</li>
+            <li id="tempEvidence">Freezing Temps: ❌</li>
+            <li id="spiritEvidence">Spirit Box: ❌</li>
+        </ul>
+    </div>
+    <div id="ghostGuess">
+        <select id="ghostSelect">
+            <option>Spirit</option>
+            <option>Wraith</option>
+            <option>Phantom</option>
+        </select>
+        <button id="guessBtn">Guess Ghost</button>
+    </div>
+</div>
+
+<div id="crosshair">+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158/examples/js/controls/PointerLockControls.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
