@@ -1,31 +1,76 @@
-body {
+/* Reset and full-screen canvas */
+body, html {
     margin: 0;
+    padding: 0;
     overflow: hidden;
+    width: 100%;
+    height: 100%;
     background: black;
     font-family: Arial, sans-serif;
     color: white;
 }
 
+/* Canvas fills entire screen */
 canvas {
     display: block;
+    width: 100%;
+    height: 100%;
 }
 
+/* UI overlay */
 #ui {
     position: absolute;
     top: 10px;
     left: 10px;
     z-index: 10;
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border-radius: 5px;
 }
 
+/* Sanity and equipment text */
+#sanity, #equipment {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Evidence list styling */
+#evidence ul {
+    list-style: none;
+    padding-left: 10px;
+    margin: 0;
+}
+
+/* Ghost guess selector */
+#ghostGuess {
+    margin-top: 10px;
+}
+
+/* Crosshair in center of screen */
 #crosshair {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 24px;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
     z-index: 5;
+    pointer-events: none; /* So it doesn’t block clicks */
 }
 
-button {
+/* Buttons and select styling */
+button, select {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid white;
+    border-radius: 3px;
+    padding: 4px 8px;
     margin-top: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover, select:hover {
+    background: rgba(255,255,255,0.3);
 }
