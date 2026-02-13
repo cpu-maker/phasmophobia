@@ -1,3 +1,6 @@
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js';
+import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/controls/PointerLockControls.js';
+
 let scene, camera, renderer, controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 let velocity = new THREE.Vector3();
@@ -24,26 +27,43 @@ init();
 animate();
 
 function init() {
+
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x000000, 10, 60);
+    scene.background = new THREE.Color(0x000000);
+    scene.fog = new THREE.Fog(0x000000, 10, 80);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1000);
+    camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
 
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    controls = new THREE.PointerLockControls(camera, document.body);
+    // Pointer Lock Controls
+    controls = new PointerLockControls(camera, document.body);
     document.body.addEventListener("click", () => controls.lock());
     scene.add(controls.getObject());
 
+    // Proper spawn position
+    controls.getObject().position.set(0, 2, 5);
+
+    // Lighting
+    const ambient = new THREE.AmbientLight(0x404040);
+    scene.add(ambient);
+
     const light = new THREE.PointLight(0xffffff, 1, 100);
     light.position.set(0, 10, 0);
+    light.castShadow = true;
     scene.add(light);
 
+    // Floor
     const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(50, 50),
+        new THREE.PlaneGeometry(100, 100),
         new THREE.MeshStandardMaterial({ color: 0x222222 })
     );
     floor.rotation.x = -Math.PI / 2;
@@ -58,32 +78,37 @@ function init() {
 
     document.getElementById("guessBtn").addEventListener("click", checkGuess);
 
+    window.addEventListener("resize", onWindowResize);
+
     setInterval(updateGame, 1000);
 }
 
 function createHouse() {
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
 
-    const rooms = [
+    const roomPositions = [
         { x: 0, z: 0 },
-        { x: 15, z: 0 },
-        { x: -15, z: 0 }
+        { x: 20, z: 0 },
+        { x: -20, z: 0 }
     ];
 
-    rooms.forEach(r => {
+    roomPositions.forEach(pos => {
         const walls = [
-            new THREE.Mesh(new THREE.BoxGeometry(20, 10, 1), wallMaterial),
-            new THREE.Mesh(new THREE.BoxGeometry(20, 10, 1), wallMaterial),
-            new THREE.Mesh(new THREE.BoxGeometry(1, 10, 20), wallMaterial),
-            new THREE.Mesh(new THREE.BoxGeometry(1, 10, 20), wallMaterial)
+            new THREE.Mesh(new THREE.BoxGeometry(20, 8, 1), wallMaterial),
+            new THREE.Mesh(new THREE.BoxGeometry(20, 8, 1), wallMaterial),
+            new THREE.Mesh(new THREE.BoxGeometry(1, 8, 20), wallMaterial),
+            new THREE.Mesh(new THREE.BoxGeometry(1, 8, 20), wallMaterial)
         ];
 
-        walls[0].position.set(r.x, 5, r.z - 10);
-        walls[1].position.set(r.x, 5, r.z + 10);
-        walls[2].position.set(r.x - 10, 5, r.z);
-        walls[3].position.set(r.x + 10, 5, r.z);
+        walls[0].position.set(pos.x, 4, pos.z - 10);
+        walls[1].position.set(pos.x, 4, pos.z + 10);
+        walls[2].position.set(pos.x - 10, 4, pos.z);
+        walls[3].position.set(pos.x + 10, 4, pos.z);
 
-        walls.forEach(w => scene.add(w));
+        walls.forEach(w => {
+            w.castShadow = true;
+            scene.add(w);
+        });
     });
 }
 
@@ -91,16 +116,22 @@ function createGhost() {
     ghost = ghostTypes[Math.floor(Math.random() * ghostTypes.length)];
 
     ghostMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(1.5, 16, 16),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })
+        new THREE.SphereGeometry(1.5, 32, 32),
+        new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3
+        })
     );
+
     ghostMesh.position.set(0, 2, 0);
     scene.add(ghostMesh);
 }
 
 function updateGame() {
     sanity -= 0.5;
-    document.getElementById("sanity").innerText = "Sanity: " + Math.floor(sanity) + "%";
+    document.getElementById("sanity").innerText =
+        "Sanity: " + Math.floor(sanity) + "%";
 
     if (sanity <= 50 && Math.random() < 0.3) triggerEvent();
     if (sanity <= 20 && !huntActive) startHunt();
@@ -110,7 +141,7 @@ function updateGame() {
 
 function triggerEvent() {
     ghostMesh.material.opacity = 0.8;
-    setTimeout(() => ghostMesh.material.opacity = 0.3, 1000);
+    setTimeout(() => (ghostMesh.material.opacity = 0.3), 1000);
 
     if (ghost.emf5) {
         evidence.emf5 = true;
@@ -135,6 +166,7 @@ function startHunt() {
 
 function checkGuess() {
     const guess = document.getElementById("ghostSelect").value;
+
     if (guess === ghost.name) {
         alert("Correct! You survived!");
         location.reload();
@@ -149,38 +181,27 @@ function gameOver(message) {
 }
 
 function onKeyDown(event) {
-    switch(event.code) {
+    switch (event.code) {
         case "KeyW": moveForward = true; break;
         case "KeyS": moveBackward = true; break;
         case "KeyA": moveLeft = true; break;
         case "KeyD": moveRight = true; break;
-        case "Digit1":
-            document.getElementById("equipment").innerText = "Equipment: EMF";
-            break;
-        case "Digit2":
-            document.getElementById("equipment").innerText = "Equipment: Thermometer";
-            if (ghost.freezing) {
-                evidence.freezing = true;
-                document.getElementById("tempEvidence").innerText = "Freezing Temps: ✅";
-            }
-            break;
-        case "Digit3":
-            document.getElementById("equipment").innerText = "Equipment: Spirit Box";
-            if (ghost.spiritBox) {
-                evidence.spiritBox = true;
-                document.getElementById("spiritEvidence").innerText = "Spirit Box: ✅";
-            }
-            break;
     }
 }
 
 function onKeyUp(event) {
-    switch(event.code) {
+    switch (event.code) {
         case "KeyW": moveForward = false; break;
         case "KeyS": moveBackward = false; break;
         case "KeyA": moveLeft = false; break;
         case "KeyD": moveRight = false; break;
     }
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function animate() {
